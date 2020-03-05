@@ -1,0 +1,104 @@
+###########################K MEANS#############################################
+
+from random import randint
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import style
+import pandas as pd 
+
+class K_Means:
+    def __init__(self, k =3, r = 10, tolerance = 0.001, max_iters = 500):
+        self.k = k
+        self.tolerance = tolerance
+        self.max_iters = max_iters
+        self.r = r
+        self.riteration = {}
+        for i in range(self.r):
+            self.riteration[i] = []
+    
+    def plot(self):
+        df = pd.read_csv('GMM_dataset.txt', sep="  ", header=None)
+        dataset = df.astype(float).values.tolist()
+        X = df.values 
+
+        for i in range(self.r):
+            # Plotting starts here
+            colors = 10*["g", "r", "b", "c", "y", "k"]
+    
+            for centroid in km.centroids:
+                plt.scatter(km.centroids[centroid][0], km.centroids[centroid][1], s = 130, marker = "x")
+    
+            for classification in km.classes:
+                color = colors[classification]
+                for features in km.classes[classification]:
+                    plt.scatter(features[0], features[1], color = color,s = 30)
+        
+            plt.show()    
+    
+    def fit(self, data):
+        self.centroids = {}
+
+        #initialize the centroids to random data selection
+        for i in range(self.k):
+            rand = randint(0, len(data))
+            self.centroids[i] = data[np.random.randint(0,len(data))]
+        
+		#begin iterations
+        for i in range(self.max_iters):
+            self.classes = {}
+            for i in range(self.k):
+                self.classes[i] = []
+
+        #distance between the point and cluster and select the nearest centroid
+            for features in data:
+                distances = [np.linalg.norm(features - self.centroids[centroid]) for centroid in self.centroids]
+                classification = distances.index(min(distances))
+                self.classes[classification].append(features)
+
+            previous = dict(self.centroids)
+
+            #re-calculate the centroids
+            for classification in self.classes:
+                self.centroids[classification] = np.average(self.classes[classification], axis = 0)
+
+            converge = True
+
+            for centroid in self.centroids:
+
+                original_centroid = previous[centroid]
+                curr = self.centroids[centroid]
+
+                if np.sum((curr - original_centroid)/original_centroid * 100.0) > self.tolerance:
+                    converge = False
+
+            #break loop when converged
+            if converge:
+                break
+
+    def pred(self, data):
+        for row in data:
+            distances = [np.linalg.norm(row - self.centroids[centroid]) for centroid in self.centroids]             
+            classification = distances.index(min(distances))
+            return classification
+    
+    def r_fit(self, data, r = 10):
+        for i in range(r):
+            self.fit(data)
+            self.plot()
+            self.riteration[i] = self.centroids    
+            #return max(self.riteration)
+        
+
+
+# Dataprep
+df = pd.read_csv('GMM_dataset.txt', sep="  ", header=None)
+train = df.iloc[:750].reset_index().drop(['index'], axis = 1)  
+test = df.iloc[750:].reset_index().drop(['index'], axis = 1) 
+train = np.asarray(train)
+test = np.asarray(test)
+
+# fit model
+km = K_Means(3)
+km.centroids
+km.pred(train)
+km.r_fit(train)
